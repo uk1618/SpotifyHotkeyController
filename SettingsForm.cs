@@ -1,40 +1,42 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace SpotifyHotkeyController
 {
     public partial class SettingsForm : Form
     {
+        // Modern Color Palette
+        private readonly Color BackColorDark = Color.FromArgb(32, 32, 32);
+        private readonly Color SurfaceColor = Color.FromArgb(45, 45, 48);
+        private readonly Color BorderColor = Color.FromArgb(60, 60, 60);
+        private readonly Color AccentColor = Color.FromArgb(0, 122, 204); // VS Blue
+        private readonly Color AccentHoverColor = Color.FromArgb(28, 151, 234);
+        private readonly Color TextPrimary = Color.FromArgb(240, 240, 240);
+        private readonly Color TextSecondary = Color.FromArgb(160, 160, 160);
+        private readonly Color ErrorColor = Color.FromArgb(231, 76, 60);
+
         private HotkeyConfig config;
-        private HotkeyTextBox txtPlayPause = null!;
-        private HotkeyTextBox txtNextTrack = null!;
-        private HotkeyTextBox txtPreviousTrack = null!;
-        private Button btnSave = null!;
-        private Button btnCancel = null!;
-        private Button btnReset = null!;
+        
+        // Custom Controls
+        private ModernHotkeyControl txtPlayPause = null!;
+        private ModernHotkeyControl txtNextTrack = null!;
+        private ModernHotkeyControl txtPreviousTrack = null!;
+        private ModernButton btnSave = null!;
+        private ModernButton btnCancel = null!;
+        private ModernButton btnReset = null!;
 
         public event EventHandler? HotkeysChanged;
 
         public SettingsForm(HotkeyConfig currentConfig)
         {
+            // Clone config
             config = new HotkeyConfig
             {
-                PlayPause = new HotkeyDefinition
-                {
-                    Modifiers = currentConfig.PlayPause.Modifiers,
-                    Key = currentConfig.PlayPause.Key
-                },
-                NextTrack = new HotkeyDefinition
-                {
-                    Modifiers = currentConfig.NextTrack.Modifiers,
-                    Key = currentConfig.NextTrack.Key
-                },
-                PreviousTrack = new HotkeyDefinition
-                {
-                    Modifiers = currentConfig.PreviousTrack.Modifiers,
-                    Key = currentConfig.PreviousTrack.Key
-                }
+                PlayPause = new HotkeyDefinition { Modifiers = currentConfig.PlayPause.Modifiers, Key = currentConfig.PlayPause.Key },
+                NextTrack = new HotkeyDefinition { Modifiers = currentConfig.NextTrack.Modifiers, Key = currentConfig.NextTrack.Key },
+                PreviousTrack = new HotkeyDefinition { Modifiers = currentConfig.PreviousTrack.Modifiers, Key = currentConfig.PreviousTrack.Key }
             };
 
             InitializeComponent();
@@ -43,126 +45,137 @@ namespace SpotifyHotkeyController
 
         private void InitializeComponent()
         {
-            // Form settings
+            // Form Setup
             this.Text = "Hotkey Settings";
-            this.Size = new Size(500, 380);
+            this.Size = new Size(600, 560);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(32, 32, 36);
-            this.ForeColor = Color.White;
+            this.BackColor = BackColorDark;
+            this.ForeColor = TextPrimary;
+            this.DoubleBuffered = true;
 
-            // Title label
+            // Padding container
+            int px = 40;
+            int py = 30;
+
+            // 1. Header Section
             var lblTitle = new Label
             {
-                Text = "Configure Hotkeys",
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                ForeColor = Color.White,
+                Text = "Controller Settings",
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                ForeColor = TextPrimary,
                 AutoSize = true,
-                Location = new Point(30, 25)
+                Location = new Point(px, py)
             };
             this.Controls.Add(lblTitle);
 
-            // Subtitle
             var lblSubtitle = new Label
             {
-                Text = "Click on a field and press your desired key combination",
-                Font = new Font("Segoe UI", 9),
-                ForeColor = Color.FromArgb(180, 180, 180),
+                Text = "Customize your global media shortcuts.",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = TextSecondary,
                 AutoSize = true,
-                Location = new Point(30, 62)
+                Location = new Point(px, py + 40)
             };
             this.Controls.Add(lblSubtitle);
 
-            int yPos = 110;
-            int spacing = 75;
+            // 2. Hotkey Section
+            int startY = 110;
+            int spacing = 85;
+            int inputOffsetX = 260;
 
-            // Play/Pause hotkey
-            CreateHotkeyRow("Play / Pause", ref txtPlayPause, yPos);
-            yPos += spacing;
+            // Play/Pause
+            CreateHotkeySection("Play / Pause", "Toggles playback state", ref txtPlayPause, px, startY, inputOffsetX);
+            
+            // Next
+            CreateHotkeySection("Next Track", "Skips to the next song", ref txtNextTrack, px, startY + spacing, inputOffsetX);
+            
+            // Prev
+            CreateHotkeySection("Previous Track", "Returns to previous song", ref txtPreviousTrack, px, startY + spacing * 2, inputOffsetX);
 
-            // Next Track hotkey
-            CreateHotkeyRow("Next Track", ref txtNextTrack, yPos);
-            yPos += spacing;
+            // 3. Action Buttons (Bottom)
+            int btnHeight = 40;
+            int btnY = 460;
 
-            // Previous Track hotkey
-            CreateHotkeyRow("Previous Track", ref txtPreviousTrack, yPos);
-
-            // Buttons
-            btnReset = new Button
+            // Reset (Left)
+            btnReset = new ModernButton
             {
-                Text = "Reset to Default",
-                Location = new Point(30, 305),
-                Size = new Size(130, 36),
-                BackColor = Color.FromArgb(50, 50, 54),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9),
-                Cursor = Cursors.Hand
+                Text = "Reset Defaults",
+                Location = new Point(px, btnY),
+                Size = new Size(130, btnHeight),
+                BackColor = SurfaceColor,
+                ForeColor = TextSecondary,
+                HoverColor = Color.FromArgb(60, 60, 65)
             };
-            btnReset.FlatAppearance.BorderColor = Color.FromArgb(70, 70, 74);
             btnReset.Click += BtnReset_Click;
             this.Controls.Add(btnReset);
 
-            btnCancel = new Button
+            // Save (Right)
+            btnSave = new ModernButton
             {
-                Text = "Cancel",
-                Location = new Point(280, 305),
-                Size = new Size(90, 36),
-                BackColor = Color.FromArgb(50, 50, 54),
+                Text = "Save Changes",
+                Location = new Point(this.ClientSize.Width - px - 150, btnY),
+                Size = new Size(150, btnHeight),
+                BackColor = AccentColor,
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9),
-                Cursor = Cursors.Hand,
-                DialogResult = DialogResult.Cancel
+                HoverColor = AccentHoverColor, // Bright Blue
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
-            btnCancel.FlatAppearance.BorderColor = Color.FromArgb(70, 70, 74);
-            this.Controls.Add(btnCancel);
-
-            btnSave = new Button
-            {
-                Text = "Save",
-                Location = new Point(380, 305),
-                Size = new Size(90, 36),
-                BackColor = Color.FromArgb(0, 120, 212),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            btnSave.FlatAppearance.BorderSize = 0;
             btnSave.Click += BtnSave_Click;
             this.Controls.Add(btnSave);
+
+            // Cancel (Left of Save)
+            btnCancel = new ModernButton
+            {
+                Text = "Cancel",
+                Location = new Point(btnSave.Left - 110 - 20, btnY),
+                Size = new Size(110, btnHeight),
+                BackColor = SurfaceColor, // Match Reset button style
+                ForeColor = TextSecondary,
+                HoverColor = Color.FromArgb(60, 60, 65)
+            };
+            btnCancel.Click += (s, e) => this.Close();
+            this.Controls.Add(btnCancel);
 
             this.CancelButton = btnCancel;
             this.AcceptButton = btnSave;
         }
 
-        private void CreateHotkeyRow(string labelText, ref HotkeyTextBox textBox, int yPos)
+        private void CreateHotkeySection(string title, string desc, ref ModernHotkeyControl control, int x, int y, int offsetX)
         {
-            var label = new Label
+            // Title Label
+            var lbl = new Label
             {
-                Text = labelText,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                ForeColor = Color.White,
+                Text = title,
+                Font = new Font("Segoe UI Semibold", 11),
+                ForeColor = TextPrimary,
                 AutoSize = true,
-                Location = new Point(30, yPos)
+                Location = new Point(x, y)
             };
-            this.Controls.Add(label);
+            this.Controls.Add(lbl);
 
-            textBox = new HotkeyTextBox
+            // Control
+            control = new ModernHotkeyControl
             {
-                Location = new Point(30, yPos + 25),
-                Size = new Size(440, 35),
-                BackColor = Color.FromArgb(45, 45, 48),
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Segoe UI", 11),
-                ReadOnly = true,
-                Cursor = Cursors.Hand
+                Location = new Point(x + offsetX, y - 5), // Use the new wider offset
+                Size = new Size(240, 40),
+                ParentBackColor = this.BackColor
             };
-            this.Controls.Add(textBox);
+            
+            // Description under title
+            var lblDesc = new Label
+            {
+                Text = desc,
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.FromArgb(100, 100, 100),
+                AutoSize = true,
+                Location = new Point(x, y + 25)
+            };
+            this.Controls.Add(lblDesc);
+
+            this.Controls.Add(control);
         }
 
         private void LoadCurrentHotkeys()
@@ -174,113 +187,223 @@ namespace SpotifyHotkeyController
 
         private void BtnReset_Click(object? sender, EventArgs e)
         {
-            var result = MessageBox.Show(
-                "Reset all hotkeys to default values?",
-                "Reset Hotkeys",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
+            if (MessageBox.Show("Reset all hotkeys?", "Reset", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                var defaultConfig = new HotkeyConfig();
-                txtPlayPause.Hotkey = defaultConfig.PlayPause;
-                txtNextTrack.Hotkey = defaultConfig.NextTrack;
-                txtPreviousTrack.Hotkey = defaultConfig.PreviousTrack;
+                var def = new HotkeyConfig();
+                txtPlayPause.Hotkey = def.PlayPause;
+                txtNextTrack.Hotkey = def.NextTrack;
+                txtPreviousTrack.Hotkey = def.PreviousTrack;
             }
         }
 
         private void BtnSave_Click(object? sender, EventArgs e)
         {
-            // Validate all hotkeys are set
+            // Validate
             if (txtPlayPause.Hotkey.Key == System.Windows.Forms.Keys.None ||
                 txtNextTrack.Hotkey.Key == System.Windows.Forms.Keys.None ||
                 txtPreviousTrack.Hotkey.Key == System.Windows.Forms.Keys.None)
             {
-                MessageBox.Show(
-                    "Please set all hotkeys before saving.",
-                    "Validation Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                MessageBox.Show("All hotkeys must be set.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Update config
+            // Save
             config.PlayPause = txtPlayPause.Hotkey;
             config.NextTrack = txtNextTrack.Hotkey;
             config.PreviousTrack = txtPreviousTrack.Hotkey;
-
-            // Save to file
             config.Save();
 
-            // Notify main form
             HotkeysChanged?.Invoke(this, EventArgs.Empty);
-
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        // --- Custom Painting for Form Background (Optional: Gradient) ---
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            // Subtle gradient for premium feel
+            using (var brush = new LinearGradientBrush(this.ClientRectangle, 
+                   Color.FromArgb(32, 32, 32), 
+                   Color.FromArgb(28, 28, 28), 
+                   LinearGradientMode.Vertical))
+            {
+                e.Graphics.FillRectangle(brush, this.ClientRectangle);
+            }
         }
     }
 
     /// <summary>
-    /// Custom TextBox that captures hotkey combinations.
+    /// Modern Button with rounded corners and hover animations
     /// </summary>
-    public class HotkeyTextBox : TextBox
+    public class ModernButton : Button
+    {
+        public Color HoverColor { get; set; } = Color.Gray;
+        private bool isHovered = false;
+
+        public ModernButton()
+        {
+            this.FlatStyle = FlatStyle.Flat;
+            this.FlatAppearance.BorderSize = 0;
+            this.Cursor = Cursors.Hand;
+            this.DoubleBuffered = true;
+            this.Font = new Font("Segoe UI", 9);
+            
+            this.MouseEnter += (s, e) => { isHovered = true; Invalidate(); };
+            this.MouseLeave += (s, e) => { isHovered = false; Invalidate(); };
+        }
+
+        protected override void OnPaint(PaintEventArgs pevent)
+        {
+            var g = pevent.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            var rect = new Rectangle(0, 0, Width, Height);
+            var color = isHovered ? HoverColor : BackColor;
+
+            // 1. Fill the entire rectangle with the PARENT's background color first
+            // This "erases" the default button background behind the rounded corners
+            if (Parent != null)
+            {
+                using (var bgBrush = new SolidBrush(Parent.BackColor))
+                {
+                    g.FillRectangle(bgBrush, rect);
+                }
+            }
+            else
+            {
+                 g.Clear(Color.Black); // Fallback
+            }
+
+            // 2. Draw Rounded Button Background
+            using (var path = GetRoundedPath(rect, 8))
+            using (var brush = new SolidBrush(color))
+            {
+                g.FillPath(brush, path);
+            }
+
+            // 3. Draw Text
+            TextRenderer.DrawText(g, Text, Font, rect, ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+        }
+
+        private GraphicsPath GetRoundedPath(Rectangle rect, int radius)
+        {
+            GraphicsPath path = new GraphicsPath();
+            int d = radius * 2;
+            path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+    }
+
+    /// <summary>
+    /// A visual control to look like a modern input chip for hotkeys.
+    /// Captures keys and displays them nicely.
+    /// </summary>
+    public class ModernHotkeyControl : Control
     {
         private HotkeyDefinition hotkey = new HotkeyDefinition();
+        private bool isFocused = false;
+        private SolidBrush bgBrush;
+        private Pen borderPen;
+
+        public Color ParentBackColor { get; set; } = Color.Black;
 
         public HotkeyDefinition Hotkey
         {
             get => hotkey;
-            set
-            {
-                hotkey = value;
-                UpdateDisplay();
-            }
+            set { hotkey = value; Invalidate(); }
         }
 
-        public HotkeyTextBox()
+        public ModernHotkeyControl()
         {
-            this.KeyDown += HotkeyTextBox_KeyDown;
-            this.Enter += (s, e) => this.BackColor = Color.FromArgb(60, 60, 64);
-            this.Leave += (s, e) => this.BackColor = Color.FromArgb(45, 45, 48);
+            this.SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.Selectable, true);
+            this.Size = new Size(200, 40);
+            this.Cursor = Cursors.Hand;
+            
+            bgBrush = new SolidBrush(Color.FromArgb(45, 45, 48));
+            borderPen = new Pen(Color.FromArgb(60, 60, 60), 1);
         }
 
-        private void HotkeyTextBox_KeyDown(object? sender, KeyEventArgs e)
+        protected override void OnEnter(EventArgs e)
+        {
+            isFocused = true;
+            borderPen.Color = Color.FromArgb(0, 122, 204); // Highlight color
+            Invalidate();
+        }
+
+        protected override void OnLeave(EventArgs e)
+        {
+            isFocused = false;
+            borderPen.Color = Color.FromArgb(60, 60, 60); // Normal color
+            Invalidate();
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             e.SuppressKeyPress = true;
             e.Handled = true;
 
-            // Ignore modifier-only presses - using full type names to avoid ambiguity
-            Keys keyCode = e.KeyCode;
-            if (keyCode == Keys.ControlKey || 
-                keyCode == Keys.ShiftKey ||
-                keyCode == Keys.Menu || 
-                keyCode == Keys.LWin || 
-                keyCode == Keys.RWin)
-            {
+            // Filter
+            var k = e.KeyCode;
+            if (k == System.Windows.Forms.Keys.ControlKey || k == System.Windows.Forms.Keys.ShiftKey || 
+                k == System.Windows.Forms.Keys.Menu || k == System.Windows.Forms.Keys.LWin || k == System.Windows.Forms.Keys.RWin)
                 return;
-            }
 
-            // Build modifiers
+            // Build
             SpotifyHotkeyController.ModifierKeys mods = SpotifyHotkeyController.ModifierKeys.None;
             if (e.Control) mods |= SpotifyHotkeyController.ModifierKeys.Control;
             if (e.Alt) mods |= SpotifyHotkeyController.ModifierKeys.Alt;
             if (e.Shift) mods |= SpotifyHotkeyController.ModifierKeys.Shift;
+            if (HasWindowsMod(e.Modifiers)) mods |= SpotifyHotkeyController.ModifierKeys.Win; // Basic check
 
-            // Set hotkey
             hotkey.Modifiers = mods;
-            hotkey.Key = keyCode;
-
-            UpdateDisplay();
+            hotkey.Key = k;
+            Invalidate();
         }
 
-        private void UpdateDisplay()
+        private bool HasWindowsMod(Keys mods) { return false; } // WinForms doesn't easily expose Win key modifier in standard KEA without hooks, simplified for now.
+
+        protected override void OnPaint(PaintEventArgs e)
         {
-            this.Text = hotkey.ToString();
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            var rect = new Rectangle(1, 1, Width - 3, Height - 3);
+            
+            // Background
+            using (var path = GetRoundedPath(rect, 6))
+            {
+                g.FillPath(bgBrush, path);
+                g.DrawPath(borderPen, path);
+            }
+
+            // Text
+            string text = hotkey.ToString();
+            if (string.IsNullOrEmpty(text) || text == " + None") text = "Press Keys...";
+
+            // Draw "Chip" style or just clean text
+            // Let's do clean text with maybe a focused indicator
+            Color textColor = isFocused ? Color.White : Color.FromArgb(220, 220, 220);
+            TextRenderer.DrawText(g, text, new Font("Segoe UI Semibold", 10), ClientRectangle, textColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        // Protect from arrow keys moving focus
+        protected override bool IsInputKey(Keys keyData) { return true; }
+
+        private GraphicsPath GetRoundedPath(Rectangle rect, int radius)
         {
-            return true; // Prevent default processing
+            GraphicsPath path = new GraphicsPath();
+            int d = radius * 2;
+            path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
         }
     }
 }
