@@ -59,6 +59,27 @@ namespace SpotifyHotkeyController
             // Padding container
             int px = 40;
             int py = 30;
+            int titleOffsetX = 0;
+
+            // Logo
+            try
+            {
+                string logoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images", "hotkey_logo.png");
+                if (System.IO.File.Exists(logoPath))
+                {
+                    var pbLogo = new PictureBox
+                    {
+                        Size = new Size(50, 50),
+                        Location = new Point(px, py),
+                        SizeMode = PictureBoxSizeMode.Zoom,
+                        Image = Image.FromFile(logoPath),
+                        BackColor = Color.Transparent
+                    };
+                    this.Controls.Add(pbLogo);
+                    titleOffsetX = 70; // Shift title to the right
+                }
+            }
+            catch { /* Ignore missing logo */ }
 
             // 1. Header Section
             var lblTitle = new Label
@@ -67,7 +88,7 @@ namespace SpotifyHotkeyController
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 ForeColor = TextPrimary,
                 AutoSize = true,
-                Location = new Point(px, py)
+                Location = new Point(px + titleOffsetX, py)
             };
             this.Controls.Add(lblTitle);
 
@@ -77,7 +98,7 @@ namespace SpotifyHotkeyController
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 ForeColor = TextSecondary,
                 AutoSize = true,
-                Location = new Point(px, py + 40)
+                Location = new Point(px + titleOffsetX, py + 40)
             };
             this.Controls.Add(lblSubtitle);
 

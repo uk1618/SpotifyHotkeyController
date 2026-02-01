@@ -120,15 +120,33 @@ namespace SpotifyHotkeyController
                 Visible = true
             };
 
-            // Create a simple icon (white circle on transparent background)
-            // In production, you'd use a proper .ico file
-            using (var bmp = new System.Drawing.Bitmap(16, 16))
-            using (var g = System.Drawing.Graphics.FromImage(bmp))
+            // Custom Icon
+            try
             {
-                g.Clear(System.Drawing.Color.Transparent);
-                g.FillEllipse(System.Drawing.Brushes.White, 2, 2, 12, 12);
-                g.DrawEllipse(new System.Drawing.Pen(System.Drawing.Color.Gray, 1), 2, 2, 12, 12);
-                trayIcon.Icon = System.Drawing.Icon.FromHandle(bmp.GetHicon());
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images", "tray_icon.png");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    using (var bmp = new System.Drawing.Bitmap(iconPath))
+                    {
+                        trayIcon.Icon = System.Drawing.Icon.FromHandle(bmp.GetHicon());
+                    }
+                }
+                else
+                {
+                     throw new System.IO.FileNotFoundException();
+                }
+            }
+            catch
+            {
+                 // Fallback
+                 using (var bmp = new System.Drawing.Bitmap(16, 16))
+                 using (var g = System.Drawing.Graphics.FromImage(bmp))
+                 {
+                     g.Clear(System.Drawing.Color.Transparent);
+                     g.FillEllipse(System.Drawing.Brushes.White, 2, 2, 12, 12);
+                     g.DrawEllipse(new System.Drawing.Pen(System.Drawing.Color.Gray, 1), 2, 2, 12, 12);
+                     trayIcon.Icon = System.Drawing.Icon.FromHandle(bmp.GetHicon());
+                 }
             }
 
             // Double-click shows info
