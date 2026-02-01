@@ -328,6 +328,12 @@ namespace SpotifyHotkeyController
             borderPen = new Pen(Color.FromArgb(60, 60, 60), 1);
         }
 
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            this.Focus();
+        }
+
         protected override void OnEnter(EventArgs e)
         {
             isFocused = true;
