@@ -43,6 +43,40 @@ namespace SpotifyHotkeyController
             LoadCurrentHotkeys();
         }
 
+        private bool IsStartupEnabled()
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false))
+                {
+                    return key?.GetValue("SpotifyHotkeyController") != null;
+                }
+            }
+            catch { return false; }
+        }
+
+        private void SetStartup(bool enable)
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true))
+                {
+                    if (enable)
+                    {
+                        key?.SetValue("SpotifyHotkeyController", Application.ExecutablePath);
+                    }
+                    else
+                    {
+                        key?.DeleteValue("SpotifyHotkeyController", false);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to change startup setting: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void InitializeComponent()
         {
             // Form Setup
@@ -115,6 +149,36 @@ namespace SpotifyHotkeyController
             
             // Prev
             CreateHotkeySection("Previous Track", "Returns to previous song", ref txtPreviousTrack, px, startY + spacing * 2, inputOffsetX);
+
+            // 4. Startup Section
+            int startupY = 360;
+            var lblStartup = new Label
+            {
+                Text = "Run at Startup",
+                Font = new Font("Segoe UI Semibold", 11),
+                ForeColor = TextPrimary,
+                AutoSize = true,
+                Location = new Point(px, startupY)
+            };
+            this.Controls.Add(lblStartup);
+
+            var toggleStartup = new ModernToggle
+            {
+                Location = new Point(px + 260, startupY), // Align with inputs
+                Checked = IsStartupEnabled()
+            };
+            toggleStartup.CheckedChanged += (s, e) => SetStartup(toggleStartup.Checked);
+            this.Controls.Add(toggleStartup);
+            
+            var lblStartupDesc = new Label
+            {
+                Text = "Start app automatically when you log in.",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.FromArgb(100, 100, 100),
+                AutoSize = true,
+                Location = new Point(px, startupY + 25)
+            };
+            this.Controls.Add(lblStartupDesc);
 
             // 3. Action Buttons (Bottom)
             int btnHeight = 40;
@@ -429,6 +493,79 @@ namespace SpotifyHotkeyController
             path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
             path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
             path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+    }
+
+    /// <summary>
+    /// Simple Modern Toggle Switch
+    /// </summary>
+    public class ModernToggle : Control
+    {
+        private bool _checked;
+        public bool Checked
+        {
+            get => _checked;
+            set { _checked = value; Invalidate(); OnCheckedChanged(EventArgs.Empty); }
+        }
+
+        public event EventHandler CheckedChanged;
+
+        public ModernToggle()
+        {
+            this.SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.SupportsTransparentBackColor, true);
+            this.Size = new Size(50, 24);
+            this.Cursor = Cursors.Hand;
+            this.BackColor = Color.Transparent;
+        }
+
+        protected virtual void OnCheckedChanged(EventArgs e)
+        {
+            CheckedChanged?.Invoke(this, e);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            var color = _checked ? Color.FromArgb(0, 122, 204) : Color.FromArgb(70, 70, 70); // Blue or Dark Gray
+
+            // Track (Rounded Pill)
+            using (var path = GetRoundedPath(rect, Height))
+            using (var brush = new SolidBrush(color))
+            {
+                g.FillPath(brush, path);
+            }
+
+            // Knob (Circle)
+            int knobSize = Height - 4;
+            int x = _checked ? (Width - knobSize - 2) : 2;
+            using (var brush = new SolidBrush(Color.White))
+            {
+                g.FillEllipse(brush, x, 2, knobSize, knobSize);
+            }
+        }
+        
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            Checked = !Checked;
+        }
+
+        private GraphicsPath GetRoundedPath(Rectangle rect, int diameter)
+        {
+            GraphicsPath path = new GraphicsPath();
+            Rectangle arc = new Rectangle(rect.X, rect.Y, diameter, diameter);
+            
+            // Left Arc
+            path.AddArc(arc, 90, 180);
+            
+            // Right Arc
+            arc.X = rect.Right - diameter;
+            path.AddArc(arc, 270, 180);
+            
             path.CloseFigure();
             return path;
         }
