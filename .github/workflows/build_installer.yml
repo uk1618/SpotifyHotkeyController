@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -19,8 +22,8 @@ jobs:
         dotnet-version: '8.0.x'
         
     - name: Publish Application
-      # Publish to the specific folder expected by setup.iss
-      run: dotnet publish -c Release -r win-x64 --self-contained true -o bin\Release\net8.0-windows\publish
+      # Publish to the specific folder expected by setup.iss using forward slashes
+      run: dotnet publish -c Release -r win-x64 --self-contained true -o bin/Release/net8.0-windows/publish
       
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
@@ -34,7 +37,7 @@ jobs:
         name: Setup
         path: Installer/SpotifyHotkeyControllerSetup.exe
 
-    - name: Create Release
+    - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
