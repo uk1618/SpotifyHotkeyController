@@ -1,6 +1,11 @@
 # Build results
 [Bb]in/
 [Oo]bj/
+Installer/
+
+# Logs
+*.log
+*.txt
 
 # User-specific files
 *.suo
