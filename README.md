@@ -35,10 +35,5 @@ A modern, lightweight Windows application to control Spotify Global Media Keys (
     dotnet run
     ```
 
-### Automated Installer Build
-This project uses **GitHub Actions** to automatically build `Setup.exe`.
-*   Check the `.github/workflows/build_installer.yml` file.
-*   When you tag a release (e.g., `v1.0`) on GitHub, the installer is automatically built and uploaded.
-
 ## License
 MIT License. Free to use and modify.
