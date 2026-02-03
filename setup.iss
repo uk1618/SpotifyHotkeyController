@@ -1,6 +1,6 @@
 [Setup]
 AppName=Spotify Hotkey Controller
-AppVersion=1.0
+AppVersion=1.0.2
 AppPublisher=UmutK
 DefaultDirName={autopf}\SpotifyHotkeyController
 DefaultGroupName=Spotify Hotkey Controller
