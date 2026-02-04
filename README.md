@@ -1,3 +1,4 @@
+⭐ If you find this project useful, don’t forget to give it a star!
 # Spotify Hotkey Controller
 
 A modern, lightweight Windows application to control Spotify Global Media Keys (Play/Pause, Next, Previous) with customized hotkeys. Features a system tray icon, "Run at Startup" support, and a sleek dark UI.
